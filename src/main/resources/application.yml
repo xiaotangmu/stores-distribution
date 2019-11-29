@@ -33,14 +33,15 @@ spring:
     maxPoolPreparedStatementPerConnectionSize: 20
     useGlobalDataSourceStat: true
     connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
-  redis:
-    host: 192.168.126.130
-    port: 6379
-    database: 0
+#  redis:
+#    host: 192.168.126.130
+#    port: 6379
+#    database: 0
 
 mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
   type-aliases-package: com.schooltraining.storesdistribution.entities
-
-
+logging:
+  level:
+    root: info
