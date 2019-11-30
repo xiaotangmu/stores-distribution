@@ -107,6 +107,18 @@
 			<version>3.11.5</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>4.1.42.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.yeauty</groupId>
+			<artifactId>netty-websocket-spring-boot-starter</artifactId>
+			<version>0.8.0</version>
+		</dependency>
+
 
 		<dependency>
 			<groupId>mysql</groupId>

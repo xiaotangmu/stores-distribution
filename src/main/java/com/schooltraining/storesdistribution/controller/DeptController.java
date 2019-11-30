@@ -1,18 +1,11 @@
 package com.schooltraining.storesdistribution.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.schooltraining.storesdistribution.entities.Department;
 import com.schooltraining.storesdistribution.service.DepartmentService;
-import com.schooltraining.storesdistribution.util.RedisUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
+import com.schooltraining.storesdistribution.util.FileUploadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import redis.clients.jedis.Jedis;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("dept")
@@ -23,12 +16,12 @@ public class DeptController {
     //************************ 图片上传 **********************//
     @RequestMapping("fileUpload")
     public String fileUpload(@RequestParam("file") MultipartFile multipartFile) {
-        System.out.println("hello");
         // 将图片或者音视频上传到分布式的文件存储系统
-        System.out.println(multipartFile);
         // 将图片的存储路径返回给页面
+        String imgUrl = FileUploadUtil.uploadImage(multipartFile);
+        System.out.println(imgUrl);
+        return imgUrl;
 
-        return "success";
     }
 
     @Autowired

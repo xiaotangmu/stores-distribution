@@ -1,5 +1,6 @@
 package com.schooltraining.storesdistribution;
 
+import com.schooltraining.storesdistribution.nettyTest.MyServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import tk.mybatis.spring.annotation.MapperScan;
@@ -9,7 +10,13 @@ import tk.mybatis.spring.annotation.MapperScan;
 public class StoresDistributionApplication {
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(StoresDistributionApplication.class, args);
+//		try {
+//			MyServer.start();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
 	}
 
 }

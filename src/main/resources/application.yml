@@ -41,7 +41,17 @@ spring:
 mybatis:
   config-location: classpath:mybatis/mybatis-config.xml
   mapper-locations: classpath:mybatis/mapper/*.xml
-  type-aliases-package: com.schooltraining.storesdistribution.entities
+#  type-aliases-package: com.schooltraining.storesdistribution.entities
 logging:
   level:
     root: info
+
+netty-websocket:
+  host: 0.0.0.0
+  path: /myWebSocket
+  port: 8083
+  bossLoopGroupThreads: 1
+  workerLoopGroupThreads: 8
+
+
+
