@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.schooltraining.storesdistribution.mapper.AuthorityMapper">
+
+    <select id="getAuthorityByRoleId" resultType="Authority">
+        SELECT aa.id, authority_name FROM ams_authority aa INNER JOIN ams_role_authority ara
+        WHERE aa.id = ara.authority_id AND ara.role_id = #{roleId};
+    </select>
+
+</mapper>

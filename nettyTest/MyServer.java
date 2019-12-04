@@ -1,4 +1,4 @@
-package com.schooltraining.storesdistribution.nettyTest;
+package com.schooltraining.storesdistribution.newspush;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

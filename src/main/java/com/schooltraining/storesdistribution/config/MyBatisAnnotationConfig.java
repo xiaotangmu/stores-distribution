@@ -24,7 +24,7 @@ public class MyBatisAnnotationConfig {
             @Override
             public void customize(org.apache.ibatis.session.Configuration configuration) {
                 //设置驼峰命名
-//                configuration.setMapUnderscoreToCamelCase(true); //在cfg xml中配置了，版本问题不起作用
+//                configuration.setMapUnderscoreToCamelCase(true);
             }
         };
     }

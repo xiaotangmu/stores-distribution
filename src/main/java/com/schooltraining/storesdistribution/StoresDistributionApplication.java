@@ -1,6 +1,5 @@
 package com.schooltraining.storesdistribution;
 
-import com.schooltraining.storesdistribution.nettyTest.MyServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import tk.mybatis.spring.annotation.MapperScan;

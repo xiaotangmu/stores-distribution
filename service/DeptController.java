@@ -1,7 +1,6 @@
 package com.schooltraining.storesdistribution.controller;
 
 import com.schooltraining.storesdistribution.entities.Department;
-import com.schooltraining.storesdistribution.service.DepartmentService;
 import com.schooltraining.storesdistribution.util.FileUploadUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

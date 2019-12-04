@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.schooltraining.storesdistribution.mapper.RoleMapper">
+    
+    <insert id="insertRoleWithAuthRelation">
+        insert into ams_role_authority VALUES(#{roleId}, #{authorityId});
+    </insert>
+
+    <select id="selectRoleLikeRoleName" resultType="Role">
+        select* from ams_role where role_name like concat(concat("%",#{roleName}),"%")
+    </select>
+
+    <select id="selectAllRole" resultMap="resultRole">
+        SELECT ar.id,ar.role_name,ar.description,ara.authority_id,aa.authority_name
+        FROM ams_role ar , ams_authority aa, ams_role_authority ara
+        WHERE ar.id = ara.role_id AND ara.authority_id = aa.id;
+    </select>
+    <resultMap type="Role" id="resultRole">
+        <id column="id" property="id"/>
+        <result column="role_name" property="roleName"/>
+        <result column="description" property="description"/>
+        <!--
+            collection定义关联集合类型的属性的封装规则
+            ofType:指定集合里面元素的类型
+        -->
+        <collection property="authorities" ofType="Authority">
+            <!-- 定义这个集合中元素的封装规则 -->
+            <result column="authority_id" property="id"/>
+            <result column="authority_name" property="authorityName"/>
+        </collection>
+    </resultMap>
+
+
+</mapper>

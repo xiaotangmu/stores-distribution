@@ -1,4 +1,4 @@
-package com.schooltraining.storesdistribution.nettyTest;
+package com.schooltraining.storesdistribution.newspush;
 
 import com.alibaba.fastjson.JSON;
 import io.netty.channel.ChannelPipeline;
