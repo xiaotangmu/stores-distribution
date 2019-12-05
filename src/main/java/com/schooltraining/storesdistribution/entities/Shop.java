@@ -5,23 +5,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@Table(name ="ums_role")
-public class Role {
+@Table(name ="sms_shop")
+public class Shop {
 
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @GeneratedValue(generator = "JDBC")
     private Integer id;
-    private String roleName;
-    private String description;
+    private String shopAddress;
+    private String phone;
+    private String email;
 
     @Transient
-    private List<Authority> authorities;
+    private List<User> managers;
+    @Transient
+    private List<User> members;
 }

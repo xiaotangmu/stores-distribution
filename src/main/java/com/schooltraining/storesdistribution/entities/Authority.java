@@ -11,7 +11,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Accessors(chain = true)
-@Table(name = "ams_authority")
+@Table(name = "ums_authority")
 public class Authority {
 
     @Id

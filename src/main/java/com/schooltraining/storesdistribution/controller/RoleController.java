@@ -1,6 +1,7 @@
 package com.schooltraining.storesdistribution.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.schooltraining.storesdistribution.annotations.LoginRequired;
 import com.schooltraining.storesdistribution.entities.Authority;
 import com.schooltraining.storesdistribution.entities.Msg;
 import com.schooltraining.storesdistribution.entities.Role;
@@ -22,6 +23,7 @@ public class RoleController {
     RoleService roleService;
 
     @GetMapping("get")
+    @LoginRequired
     public List<Role> getRole(String roleName) {
         List<Role> roles = roleService.getRoles(roleName);
         if (roles != null) {
@@ -31,6 +33,7 @@ public class RoleController {
     }
 
     @PutMapping("update")
+    @LoginRequired
     public Object updateRole(Role role) {
         try{
             Map<String, String> map = new HashMap<>();
@@ -45,6 +48,7 @@ public class RoleController {
     }
 
     @DeleteMapping("delete")
+    @LoginRequired
     public Object deleteRole(int roleId) {
         try{
             Map<String, String> map = new HashMap<>();
@@ -59,6 +63,7 @@ public class RoleController {
     }
 
     @PostMapping("add")
+    @LoginRequired
     public Object addRole(Role role) {
         try {
             role = roleService.add(role);
@@ -73,6 +78,7 @@ public class RoleController {
     }
 
     @GetMapping("getRoles")
+    @LoginRequired
     public Object getRoles() {
         try {
             Map<String, String> map = roleService.getAll();

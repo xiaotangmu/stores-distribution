@@ -12,7 +12,7 @@ public class FileUploadUtil {
 
     public static String uploadImage(MultipartFile multipartFile) {
 
-        String imgUrl = "http://192.168.126.130";
+        String imgUrl = "http://192.168.126.131";
 
         // 上传图片到服务器
         // 配置fdfs的全局链接地址

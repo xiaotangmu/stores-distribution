@@ -6,8 +6,8 @@ import org.yeauty.standard.ServerEndpointExporter;
 
 @Configuration
 public class WebSocketConfig {
-//    @Bean
-//    public ServerEndpointExporter serverEndpointExporter(){
-//        return new ServerEndpointExporter();
-//    }
+    @Bean
+    public ServerEndpointExporter serverEndpointExporter(){
+        return new ServerEndpointExporter();
+    }
 }

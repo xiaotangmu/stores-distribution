@@ -5,11 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -29,5 +27,8 @@ public class User {
     private String gender;//1 为男，0 为女
 
     private String roleId;
+    private String roleName;//角色名
+    private Integer shopId;//所属分店
+    private Long integration;//积分
 
 }

@@ -1,5 +1,6 @@
 package com.schooltraining.storesdistribution.controller;
 
+import com.schooltraining.storesdistribution.annotations.LoginRequired;
 import com.schooltraining.storesdistribution.entities.Authority;
 import com.schooltraining.storesdistribution.entities.Msg;
 import com.schooltraining.storesdistribution.service.AuthorityService;
@@ -21,6 +22,7 @@ public class AuthorityController {
     AuthorityService authorityService;
 
     @GetMapping("getAll")
+    @LoginRequired
     public Object getAll(){
         try{
             return Msg.success(authorityService.getAll());
