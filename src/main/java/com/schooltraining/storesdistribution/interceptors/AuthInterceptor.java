@@ -73,16 +73,17 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 		if (loginSuccess) {
 			// 必须登录成功才能使用
 			if (!success.equals("success")) {
-				// 重定向会passport登录
+				// 重定向passport登录
 				StringBuffer requestURL = request.getRequestURL();
 //				response.sendRedirect("http://localhost:8081/stores/index?ReturnUrl=" + requestURL);
-				response.sendRedirect("http://localhost:9527/#/login?redirect=%2Fdashboard?ReturnUrl=" + requestURL);
+				response.sendRedirect("http://localhost:9527/#/login?redirect=%2Fdashboard&ReturnUrl=" + requestURL);
 				return false;
 			}
 
 			// 需要将token携带的用户信息写入
 			request.setAttribute("userId", successMap.get("userId"));
 			request.setAttribute("userName", successMap.get("userName"));
+			request.setAttribute("shopId", successMap.get("shopId"));
 			// 验证通过，覆盖cookie中的token
 			if (StringUtils.isNotBlank(token)) {
 				CookieUtil.setCookie(request, response, "oldToken", token, 60 * 60 * 2, true);//设置2小时后过期
@@ -94,6 +95,7 @@ public class AuthInterceptor extends HandlerInterceptorAdapter {
 				// 需要将token携带的用户信息写入
 				request.setAttribute("userId", successMap.get("userId"));
 				request.setAttribute("userName", successMap.get("userName"));
+				request.setAttribute("shopId", successMap.get("shopId"));
 
 				// 验证通过，覆盖cookie中的token
 				if (StringUtils.isNotBlank(token)) {

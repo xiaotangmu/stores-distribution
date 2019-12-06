@@ -23,9 +23,10 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 
-@ServerEndpoint(prefix = "netty-websocket")
-@Component
+//@ServerEndpoint(prefix = "netty-websocket")
+//@Component
 public class MyWebSocket {
 
     public static NotificationService notificationService;
@@ -61,8 +62,10 @@ public class MyWebSocket {
     private Session session;
 
     @OnOpen//有客户端连接进来
+//    HttpServletRequest request 协议不同使用不了，会报错
     public void onOpen(Session session, HttpHeaders headers, ParameterMap parameterMap) throws IOException {
-        String userId = parameterMap.getParameter("userId");
+        
+    	String userId = parameterMap.getParameter("userId");
         String shopId = parameterMap.getParameter("shopId");
         String userName = parameterMap.getParameter("userName");//没有该参数会报空指针异常
         userName = URLDecoder.decode(userName, "UTF-8");//解决请求路径的中文乱码
@@ -71,19 +74,9 @@ public class MyWebSocket {
         this.session = session;
         Client client = new Client(userId, shopId, userName, session);
         socketServers.add(client);
-//        CopyOnWriteArraySet<Client> clients = socketMap.get(shopId);
-//        if (clients == null) {
-//            clients = new CopyOnWriteArraySet<>();
-//        }
-//        clients.add(client);
-//        socketMap.put(shopId, clients);
 
         logger.info("客户端:【{}】连接成功", "userId : " + userId + ", userName: " + userName);
 
-//        Map<String, Object> map = new HashMap<>();
-//        map.put("socketSet", socketServers);
-
-//        sendMessage("",SYS_USERNAME, 100);//可以用来发送上线的消息
     }
 
     @OnClose//客户端关闭连接时触发

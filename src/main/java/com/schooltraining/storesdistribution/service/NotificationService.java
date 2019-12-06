@@ -8,8 +8,8 @@ public interface NotificationService {
 
     public Notification add(Notification notification);
 
-    public int keepWithMemberRelation(List<Integer> userIds, int shopId);
+    public int keepWithMemberRelation(List<Integer> userIds, int notificationId);
 
-    public int updateStatusWithUser(List<Integer> userIds, int shopId);
+    public int updateStatusWithUser(List<Integer> userIds, int notificationId);
 
 }

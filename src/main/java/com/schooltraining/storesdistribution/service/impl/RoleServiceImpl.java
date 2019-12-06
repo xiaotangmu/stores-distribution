@@ -32,6 +32,28 @@ public class RoleServiceImpl implements RoleService {
 
     @Autowired
     RedissonClient redissonClient;
+    
+    private final static String ROLES_CACHE_KEY = "role:all:info";//缓存所有role的key名
+    
+    @Override
+    public Role getRoleById(int roleId){
+    	Jedis jedis = null;
+    	try {
+    		//查找缓存
+    		jedis = redisUtil.getJedis();
+    		String jsonStrRole = jedis.hget(ROLES_CACHE_KEY, roleId + "");
+    		Role role = JSON.parseObject(jsonStrRole, Role.class);
+    		if(role != null) {
+    			return role;
+    		}
+    		//缓存中没有，查询DB，不可能
+    		return roleMapper.selectByPrimaryKey(roleId);
+    	}finally {
+    		if(jedis != null) {
+    			jedis.close();
+    		}
+    	}
+    }
 
     @Override
     public List<Role> getRoles(String roleName) {
@@ -96,7 +118,7 @@ public class RoleServiceImpl implements RoleService {
         try {
             //从缓存中获取
             jedis = redisUtil.getJedis();
-            roles2 = jedis.hgetAll("role:all:info");
+            roles2 = jedis.hgetAll(ROLES_CACHE_KEY);
             if (roles2 != null && roles2.size() > 0) {//缓存中有数据
                 return roles2;
             }
@@ -117,11 +139,11 @@ public class RoleServiceImpl implements RoleService {
                         map.put(role.getId() + "", JSON.toJSONString(role));
                     });
                     roles2 = map;
-                    jedis.hmset("role:all:info", map);
+                    jedis.hmset(ROLES_CACHE_KEY, map);
                 } else {
                     // 数据库没有
                     // 为了防止缓存穿透将，null或者空字符串值设置给redis
-                    jedis.setex("role:all:info", 60 * 3, JSON.toJSONString(""));
+                    jedis.setex(ROLES_CACHE_KEY, 60 * 3, JSON.toJSONString(""));
                 }
             } else {//有锁,自旋
                 return getAll();
@@ -141,13 +163,13 @@ public class RoleServiceImpl implements RoleService {
         Jedis jedis = null;
         try {
             jedis = redisUtil.getJedis();
-            Map<String, String> rolesStrMap = jedis.hgetAll("role:all:info");
+            Map<String, String> rolesStrMap = jedis.hgetAll(ROLES_CACHE_KEY);
             if (rolesStrMap != null && rolesStrMap.size() > 0) {//缓存中有
                 if(status == 1){//添加/更新 -- 覆盖
                     rolesStrMap.put(role.getId() + "", JSON.toJSONString(role));
-                    jedis.hmset("role:all:info", rolesStrMap);
+                    jedis.hmset(ROLES_CACHE_KEY, rolesStrMap);
                 }else if(status == 3){//删除
-                    jedis.hdel("role:all:info", deleteRoleId+"");//不能直接覆盖，还是会存在，要指定删除
+                    jedis.hdel(ROLES_CACHE_KEY, deleteRoleId+"");//不能直接覆盖，还是会存在，要指定删除
                 }
             }
             //缓存中没有不做处理

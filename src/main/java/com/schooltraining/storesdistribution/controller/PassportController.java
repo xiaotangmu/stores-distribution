@@ -1,13 +1,20 @@
 package com.schooltraining.storesdistribution.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.schooltraining.storesdistribution.annotations.LoginRequired;
+import com.schooltraining.storesdistribution.entities.Msg;
+import com.schooltraining.storesdistribution.entities.Role;
 import com.schooltraining.storesdistribution.entities.User;
+import com.schooltraining.storesdistribution.service.RoleService;
 import com.schooltraining.storesdistribution.service.UserService;
+import com.schooltraining.storesdistribution.util.CookieUtil;
 import com.schooltraining.storesdistribution.util.JwtUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +26,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.alibaba.fastjson.JSON;
 
 @Controller
+@RequestMapping("user")
 public class PassportController {
 
 	@Autowired
 	UserService userService;
+	
+	@Autowired
+	RoleService roleService;
+	
+	Map<String, Object> returnMap = null;
 
 	@RequestMapping("verify")
 	@ResponseBody
@@ -46,44 +59,102 @@ public class PassportController {
 
 	@PostMapping("login")
 	@ResponseBody
-	public String login(User umsMember, HttpServletRequest request) {
-
-		String token = "";
-
-		// 调用用户服务验证用户名和密码
-		User umsMemberLogin = userService.login(umsMember);
-		System.out.println(umsMemberLogin);
-
-		if (umsMemberLogin != null) {
-			// 登录成功
-			// 用jwt制作token
-			String userId = umsMemberLogin.getId() + "";
-			String userName = umsMemberLogin.getUserName();
-			Map<String, Object> userMap = new HashMap<>();
-			userMap.put("userId", userId);
-			userMap.put("userName", userName);
-
-			String ip = request.getHeader("x-forwarded-for");// 通过nginx转发的客户端ip
-			if (StringUtils.isBlank(ip)) {
-				ip = request.getRemoteAddr();// 从request中获取ip
-				if (StringUtils.isBlank(ip)) {
-					ip = "127.0.0.1";//都没有，出错，这里直接给了
-				}
+	public Object login(User umsMember, HttpServletRequest request, HttpServletResponse response) {
+		try {
+			Map<String, Object> mapToken = new HashMap<>();
+			//查看是否存在用户
+			int userByUserName = userService.getUserByUserName(umsMember.getUserName());
+//			System.out.println(userByUserName);
+			if(userByUserName == 0) {
+				mapToken.put("message", "该账号不存在");
+				return Msg.fail(mapToken);
 			}
+			
+			String token = "";
 
-			// 按照设计的算法对参数进行加密后，生成token
-			token = JwtUtil.encode("storesDistribution2019", userMap, ip);
+			// 调用用户服务验证用户名和密码
+			User umsMemberLogin = userService.login(umsMember);
+			System.out.println(umsMemberLogin);
+			
+			Map<String, Object> userMap = new HashMap<>();
+			if (umsMemberLogin != null) {
+				// 登录成功
+				// 用jwt制作token
+				String userIdStr = umsMemberLogin.getId() + "";
+				String userNameStr = umsMemberLogin.getUserName();
+				String shopIdStr = umsMemberLogin.getShopId() + "";
+				
+				userMap.put("userId", userIdStr);
+				userMap.put("userName", userNameStr);
+				userMap.put("shopId", shopIdStr);
 
-			//将token存入redis一份
-			userService.addUserToken(token, userId);
+				String ip = request.getHeader("x-forwarded-for");// 通过nginx转发的客户端ip
+				if (StringUtils.isBlank(ip)) {
+					ip = request.getRemoteAddr();// 从request中获取ip
+					if (StringUtils.isBlank(ip)) {
+						ip = "127.0.0.1";//都没有，出错，这里直接给了
+					}
+				}
 
-		} else {
-			// 登录失败
-			token = "fail";
+				// 按照设计的算法对参数进行加密后，生成token
+				token = JwtUtil.encode("storesDistribution2019", userMap, ip);
+
+				//将token存入redis一份
+				userService.addUserToken(token, userIdStr);
+
+			} else {
+				// 登录失败
+				mapToken.put("message", "账号或密码有误");
+				return Msg.fail(mapToken);
+//				token = "fail";
+			}
+			
+			//获取该用户角色信息
+//			List<Role> roles = userService.getRolesByUserIds(umsMemberLogin.getId());
+			Role userRole = roleService.getRoleById(umsMemberLogin.getRoleId());
+//			System.out.println(roles);
+			
+			//缓存用户信息
+//			umsMemberLogin.setRoles(roles);
+			umsMemberLogin.setRole(userRole);
+			
+			userService.setUserCache(umsMemberLogin);
+			
+			mapToken.putAll(userMap);
+			mapToken.put("role", userRole);
+			mapToken.put("token", token);
+			
+			
+			//记录cookie
+			CookieUtil.setCookie(request, response, "oldToken", token, 60 * 60 *2, true);
+			
+			return Msg.success(mapToken);
+		}catch(Exception e) {
+			Map<String, Object> tokenMap = new HashMap<>();
+			tokenMap.put("message", "服务器异常");
+			return Msg.fail(tokenMap);
 		}
-		return token;
 	}
 
+    @PostMapping("logout")
+    public Object logout(HttpServletRequest request, HttpServletResponse response){
+    	returnMap = new HashMap<>();
+        try{
+        	String oldToken = CookieUtil.getCookieValue(request, "oldToken", true);
+        	if(oldToken != null) {
+        		//将cookie移除
+        		CookieUtil.deleteCookie(request, response, "oldToken");
+        	}
+        	
+        	return Msg.success("success");
+            
+        }catch (Exception e){
+        	e.printStackTrace();
+        	returnMap.put("message", "服务器异常");
+            return Msg.fail(returnMap);
+        }
+    }
+    
 //	@RequestMapping("index")
 //	@LoginRequired(loginSuccess = false)
 //	public String index(String ReturnUrl, ModelMap map) {

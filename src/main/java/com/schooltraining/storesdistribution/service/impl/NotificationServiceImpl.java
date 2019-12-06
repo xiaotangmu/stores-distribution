@@ -15,13 +15,13 @@ public class NotificationServiceImpl implements NotificationService {
     NotificationMapper notificationMapper;
 
     @Override
-    public int keepWithMemberRelation(List<Integer> userIds, int shopId){
-        return notificationMapper.keepWithMemberRelation(userIds, shopId);
+    public int keepWithMemberRelation(List<Integer> userIds, int notificationId){
+        return notificationMapper.keepWithMemberRelation(userIds, notificationId);
     }
 
     @Override
-    public int updateStatusWithUser(List<Integer> userIds, int shopId) {
-        return notificationMapper.updateStatusWithUser(userIds, shopId);
+    public int updateStatusWithUser(List<Integer> userIds, int notificationId) {
+        return notificationMapper.updateStatusWithUser(userIds, notificationId);
     }
 
     @Override

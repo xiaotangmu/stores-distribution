@@ -25,10 +25,13 @@ public class User {
     private String phone;
     private String email;
     private String gender;//1 为男，0 为女
-
-    private String roleId;
-    private String roleName;//角色名
+    private Integer roleId;
     private Integer shopId;//所属分店
     private Long integration;//积分
+    
+    @Transient
+    private Role role;
+//    @Transient
+//    private List<Role> roles;
 
 }

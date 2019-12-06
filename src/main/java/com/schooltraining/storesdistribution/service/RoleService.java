@@ -21,4 +21,6 @@ public interface RoleService {
     public Role add(Role role);
 
     public Map<String, String> getAll();
+    
+    public Role getRoleById(int roleId);
 }
