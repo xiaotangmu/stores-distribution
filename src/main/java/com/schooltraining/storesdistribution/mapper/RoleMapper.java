@@ -13,4 +13,12 @@ public interface RoleMapper extends Mapper<Role>{
     public List<Role> selectRoleLikeRoleName(String roleName);
 
     public List<Role> selectAllRole();
+
+    public List<Role> selectNotAuthorityRole();
+
+    int deleteRelationWithAuthority(@Param("roleId") Integer roleId, @Param("authIds") List<Integer> authIds);
+
+    int insertRelations(@Param("roleId") Integer roleId, @Param("authIds") List<Integer> authIds);
+
+    int deleteRelations(@Param("roleId") Integer roleId);
 }

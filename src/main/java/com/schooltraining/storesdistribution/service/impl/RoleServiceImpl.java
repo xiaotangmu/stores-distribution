@@ -7,6 +7,7 @@ import com.schooltraining.storesdistribution.entities.Authority;
 import com.schooltraining.storesdistribution.entities.Role;
 import com.schooltraining.storesdistribution.mapper.AuthorityMapper;
 import com.schooltraining.storesdistribution.mapper.RoleMapper;
+import com.schooltraining.storesdistribution.service.AuthorityService;
 import com.schooltraining.storesdistribution.service.RoleService;
 import com.schooltraining.storesdistribution.util.RedisUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -22,7 +23,7 @@ import java.util.*;
 public class RoleServiceImpl implements RoleService {
 
     @Autowired
-    AuthorityMapper authorityMapper;
+    AuthorityService authorityService;
 
     @Autowired
     RoleMapper roleMapper;
@@ -39,15 +40,24 @@ public class RoleServiceImpl implements RoleService {
     public Role getRoleById(int roleId){
     	Jedis jedis = null;
     	try {
-    		//查找缓存
+            //查找缓存
     		jedis = redisUtil.getJedis();
+    		//查询role全部信息的缓存
     		String jsonStrRole = jedis.hget(ROLES_CACHE_KEY, roleId + "");
-    		Role role = JSON.parseObject(jsonStrRole, Role.class);
-    		if(role != null) {
-    			return role;
-    		}
-    		//缓存中没有，查询DB，不可能
-    		return roleMapper.selectByPrimaryKey(roleId);
+    		if(StringUtils.isBlank(jsonStrRole)){
+                //查询特定role 的缓存
+                jsonStrRole = jedis.get("role:" + roleId + ":info");
+                if(StringUtils.isBlank(jsonStrRole)){
+                    //缓存中没有，查询DB，有可能人工删缓存了
+                    Role role = roleMapper.selectByPrimaryKey(roleId);
+                    List<Authority> aList = authorityService.getAuthorityByRoleId(roleId);
+                    role.setAuthorities(aList);
+                    //保存缓存
+                    jedis.setex("role:" + role.getId() + ":info", 60*60*3, JSON.toJSONString(role));
+                    return role;
+                }
+            }
+    		return JSON.parseObject(jsonStrRole, Role.class);
     	}finally {
     		if(jedis != null) {
     			jedis.close();
@@ -60,7 +70,7 @@ public class RoleServiceImpl implements RoleService {
         List<Role> roles = roleMapper.selectRoleLikeRoleName(roleName);
         if (roles != null && roles.size() > 0) {
             roles.forEach(role -> {
-                List<Authority> authorityByRoleId = authorityMapper.getAuthorityByRoleId(role.getId());
+                List<Authority> authorityByRoleId = authorityService.getAuthorityByRoleId(role.getId());
                 role.setAuthorities(authorityByRoleId);
             });
             return roles;
@@ -69,12 +79,15 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public int update(Role role) {
+    public int update(Role role, List<Integer> ids) {
         Jedis jedis = null;
         int i = roleMapper.updateByPrimaryKeySelective(role);
-//        System.out.println(role);//会更新
-        if(i > 0){
-            updateRolesCache(role, 1, 0);
+        //更新关系
+        roleMapper.deleteRelations(role.getId());
+        roleMapper.insertRelations(role.getId(), ids);
+//        System.out.println(ids);//会更新
+        if(i != 0){
+            updateRolesCache(role, 2, 0, ids);
         }
         return i;
     }
@@ -82,28 +95,33 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public int delete(int id) {
         int i =  roleMapper.deleteByPrimaryKey(id);
-        if(i > 0){
-            updateRolesCache(null, 3, id);
+        //删除关系
+        roleMapper.deleteRelations(id);
+        if(i != 0){
+            updateRolesCache(null, 3, id, null);
         }
         return i;
     }
 
     @Override
-    public Role add(Role role) {
+    public Role add(Role role, List<Integer> authorityIds) {
         List<Authority> authorities = role.getAuthorities();
         int i = roleMapper.insert(role);
-        if (i > 0) {
-            if (authorities != null && authorities.size() > 0) {
-                authorities.forEach(authority -> {
-                    roleMapper.insertRoleWithAuthRelation(role.getId(), authority.getId());
+        if (i != 0) {
+//            System.out.println(i);
+            if (authorityIds != null && authorityIds.size() > 0) {
+                authorityIds.forEach(id -> {
+//            if (authorities != null && authorities.size() > 0) {
+//                authorities.forEach(authority -> {
+                    roleMapper.insertRoleWithAuthRelation(role.getId(), id);
+//                    roleMapper.insertRoleWithAuthRelation(role.getId(), authority.getId());
                 });
             }
+//            System.out.println(role);
+            //更新缓存
+            updateRolesCache(role, 1, 0, authorityIds);
         }
-
-        //更新缓存
-        if (i > 0) {
-            updateRolesCache(role, 1, 0);
-        }
+//        System.out.println(role);
         return role;
     }
 
@@ -122,7 +140,7 @@ public class RoleServiceImpl implements RoleService {
             if (roles2 != null && roles2.size() > 0) {//缓存中有数据
                 return roles2;
             }
-            System.out.println(roles2);
+//            System.out.println(roles2);
             //同步到缓存
             // 设置分布式锁
             lock = redissonClient.getLock("role:all:lock");// 声明锁
@@ -130,7 +148,12 @@ public class RoleServiceImpl implements RoleService {
             if (tryLock) {//成功上锁
                 //缓存中没有数据,从数据库中获取
                 List<Role> list = roleMapper.selectAllRole();
-
+                List<Role> rolesNoAuth = roleMapper.selectNotAuthorityRole();
+                rolesNoAuth.forEach(role -> {
+                    role.setAuthorities(new LinkedList<>());
+                    list.add(role);
+                });
+//                System.out.println(list);
                 if (list != null && list.size() > 0) {
                     // mysql查询结果存入redis
                     Map<String, String> map = new HashMap<>();
@@ -159,13 +182,25 @@ public class RoleServiceImpl implements RoleService {
         }
     }
 
-    public void updateRolesCache(Role role, int status, Integer deleteRoleId) {//status = 1 -- add/ update, 3 -- delete
+    public void updateRolesCache(Role role, int status, Integer deleteRoleId, List<Integer> ids) {//status = 1 -- add/ update, 3 -- delete
         Jedis jedis = null;
         try {
             jedis = redisUtil.getJedis();
             Map<String, String> rolesStrMap = jedis.hgetAll(ROLES_CACHE_KEY);
+//            System.out.println(rolesStrMap);
             if (rolesStrMap != null && rolesStrMap.size() > 0) {//缓存中有
-                if(status == 1){//添加/更新 -- 覆盖
+                if(status == 1 || status == 2){//添加/更新 -- 覆盖
+                    if(ids != null){
+//                        System.out.println(role.getId());
+                        List<Authority> authorityByRoleId = authorityService.getAuthorityByRoleId(role.getId());
+//                        System.out.println(authorityByRoleId);
+                        if(authorityByRoleId == null){
+                            authorityByRoleId = new ArrayList<>();
+//                            System.out.println("hello");
+                        }
+                        role.setAuthorities(authorityByRoleId);
+//                        System.out.println(role);
+                    }
                     rolesStrMap.put(role.getId() + "", JSON.toJSONString(role));
                     jedis.hmset(ROLES_CACHE_KEY, rolesStrMap);
                 }else if(status == 3){//删除

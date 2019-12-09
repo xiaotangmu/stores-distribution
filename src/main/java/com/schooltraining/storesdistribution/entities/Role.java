@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 @Data
@@ -13,7 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table(name ="ums_role")
-public class Role {
+public class Role implements Serializable {
 
     @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,4 +25,7 @@ public class Role {
 
     @Transient
     private List<Authority> authorities;
+
+    @Transient
+    private String authorityIds;
 }

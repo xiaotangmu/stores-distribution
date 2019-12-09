@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -14,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table(name ="wms_notification")
-public class Notification {
+public class Notification implements Serializable {
 
     @Id
     @GeneratedValue(generator = "JDBC")
@@ -23,7 +24,9 @@ public class Notification {
     private String content;
     private String createTime;
     private Integer userId;//推送消息的人--自己也能收到
-    private Integer shopId;//所属分店
+    private Integer storeId;//所属分店
     @Transient
     private List<User> users;
+    @Transient
+    private String status;
 }

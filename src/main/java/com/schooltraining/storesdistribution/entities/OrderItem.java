@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Accessors(chain = true)
 @Table(name ="oms_order_item")
-public class OrderItem {//订单详情
+public class OrderItem implements Serializable {//订单详情
 
     @Id
     @GeneratedValue(generator = "JDBC")
@@ -34,9 +35,9 @@ public class OrderItem {//订单详情
     private Long integration;//积分
     private String flag;//用作特殊标记
     private String remark;//备注
-    private Integer shopId;//分店id
-    private String shopName;//分店名
-    private String shopPhone;//分店电话
+    private Integer storeId;//分店id
+    private String storeName;//分店名
+    private String storePhone;//分店电话
     //...
 
 

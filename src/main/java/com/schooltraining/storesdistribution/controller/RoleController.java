@@ -6,21 +6,21 @@ import com.schooltraining.storesdistribution.entities.Authority;
 import com.schooltraining.storesdistribution.entities.Msg;
 import com.schooltraining.storesdistribution.entities.Role;
 import com.schooltraining.storesdistribution.service.RoleService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RequestMapping("role")
 public class RoleController {
 
     @Autowired
     RoleService roleService;
+
+    Map<String, Object> returnMap = null;
 
     @GetMapping("get")
     @LoginRequired
@@ -32,32 +32,39 @@ public class RoleController {
         return null;
     }
 
-    @PutMapping("update")
+    @PostMapping("update")
     @LoginRequired
     public Object updateRole(Role role) {
-        try{
+        try {
+//            System.out.println(role);
+            if(role.getId() == null){
+                return Msg.fail("id为空");
+            }
+            List<Integer> authorityIds = splitStr(role.getAuthorityIds());
+//            System.out.println(authorityIds);
             Map<String, String> map = new HashMap<>();
-            if (roleService.update(role) > 0) {
+            if (roleService.update(role, authorityIds) != 0) {
                 map.put("status", "success");
                 return Msg.success(map);
             }
             return Msg.fail("失败了");
-        }catch (Exception e){
+        } catch (Exception e) {
             return Msg.fail(e.getMessage());
         }
     }
 
-    @DeleteMapping("delete")
+    @PostMapping("delete")
     @LoginRequired
     public Object deleteRole(int roleId) {
-        try{
+        try {
+//            System.out.println(roleId);
             Map<String, String> map = new HashMap<>();
-            if (roleService.delete(roleId) > 0) {
+            if (roleService.delete(roleId) != 0) {
                 map.put("status", "success");
                 return Msg.success(map);
             }
             return Msg.fail("失败了");
-        }catch (Exception e){
+        } catch (Exception e) {
             return Msg.fail(e.getMessage());
         }
     }
@@ -65,8 +72,20 @@ public class RoleController {
     @PostMapping("add")
     @LoginRequired
     public Object addRole(Role role) {
+//    public Object addRole(@RequestBody(required = true) String resData) {
         try {
-            role = roleService.add(role);
+//            System.out.println(role);
+            String idsStr = role.getAuthorityIds();
+//            List<Integer> authorityIds = new ArrayList<>();
+//            if(StringUtils.isNotBlank(idsStr)){
+//                String[] split = idsStr.split("/");
+//                for (int i = 0; i < split.length; i++){
+//                    authorityIds.add(Integer.parseInt(split[i]));
+//                }
+//            }
+            List<Integer> authorityIds = splitStr(idsStr);
+//            System.out.println(authorityIds);
+            role = roleService.add(role, authorityIds);
             if (role.getId() != null && role.getId() > 0) {//添加成功
                 return Msg.success(role.getId());
             }
@@ -80,17 +99,33 @@ public class RoleController {
     @GetMapping("getRoles")
     @LoginRequired
     public Object getRoles() {
+        returnMap = new HashMap<>();
         try {
             Map<String, String> map = roleService.getAll();
-            Map<Integer, Role> mapRoles = new HashMap<>();
-            map.values().forEach(roleStr ->{
+//            Map<Integer, Role> mapRoles = new HashMap<>();
+            List<Role> mapRoles = new ArrayList<>();
+            map.values().forEach(roleStr -> {
                 Role role = JSON.parseObject(roleStr, Role.class);
-                mapRoles.put(role.getId(), role);
+                mapRoles.add(role);
+//                mapRoles.put(role.getId(), role);
             });
-            return Msg.success(mapRoles);
+            returnMap.put("roles", mapRoles);
+            return Msg.success(returnMap);
+//            return Msg.success(mapRoles);
         } catch (Exception e) {
             e.printStackTrace();
             return Msg.fail(e.getMessage());
         }
+    }
+
+    public List<Integer> splitStr(String idsStr){
+        List<Integer> authorityIds = new ArrayList<>();
+        if(StringUtils.isNotBlank(idsStr)){
+            String[] split = idsStr.split("/");
+            for (int i = 0; i < split.length; i++){
+                authorityIds.add(Integer.parseInt(split[i]));
+            }
+        }
+        return authorityIds;
     }
 }

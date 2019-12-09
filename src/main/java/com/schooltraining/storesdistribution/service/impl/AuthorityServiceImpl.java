@@ -28,6 +28,8 @@ public class AuthorityServiceImpl implements AuthorityService {
     @Autowired
     AuthorityMapper authorityMapper;
 
+    Jedis jedis = null;
+
     @Override
     public List<Authority> getAll() {
         List<Authority> authorities = null;
@@ -73,4 +75,11 @@ public class AuthorityServiceImpl implements AuthorityService {
             jedis.close();
         }
     }
+
+    @Override
+    public List<Authority> getAuthorityByRoleId(int roleId) {
+        List<Authority> list = authorityMapper.getAuthorityByRoleId(roleId);
+        return list;
+    }
+
 }

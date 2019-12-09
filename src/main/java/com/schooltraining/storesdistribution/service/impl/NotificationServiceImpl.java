@@ -25,6 +25,17 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public List<Notification> getNotificationsByUserId(Integer userId) {
+        if(userId != null){
+            List<Notification> notifications = notificationMapper.getNotificationsByUserId(userId);
+            if (notifications != null && notifications.size() > 0) {
+                return notifications;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public Notification add(Notification notification) {
     	int insert = notificationMapper.insert(notification);
         if(insert != 0){

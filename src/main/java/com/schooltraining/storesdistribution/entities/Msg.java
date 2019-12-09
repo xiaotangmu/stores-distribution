@@ -6,7 +6,7 @@ public class Msg {
 
     private String code;//20000: 成功，60204：失败
 
-    private Object data;//返回的数据
+    private Object extend;//返回的数据
 
     private Msg() {
     }
@@ -15,7 +15,7 @@ public class Msg {
     public static Msg success(Object obj) {
         Msg msg = new Msg();
         msg.setCode("20000");
-        msg.setData(obj);
+        msg.setExtend(obj);
         return msg;
     }
 
@@ -23,7 +23,7 @@ public class Msg {
     public static Msg fail(Object obj) {
         Msg msg = new Msg();
         msg.setCode("60204");
-        msg.setData(obj);
+        msg.setExtend(obj);
         return msg;
     }
 
@@ -35,12 +35,11 @@ public class Msg {
         this.code = code;
     }
 
-    public Object getData() {
-        return data;
+    public Object getExtend() {
+        return extend;
     }
 
-    public void setData(Object data) {
-        this.data = data;
+    public void setExtend(Object extend) {
+        this.extend = extend;
     }
-
 }

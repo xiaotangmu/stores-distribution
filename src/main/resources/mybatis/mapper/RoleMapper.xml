@@ -5,16 +5,16 @@
 <mapper namespace="com.schooltraining.storesdistribution.mapper.RoleMapper">
     
     <insert id="insertRoleWithAuthRelation">
-        insert into ams_role_authority VALUES(#{roleId}, #{authorityId});
+        insert into ums_role_authority VALUES(#{roleId}, #{authorityId});
     </insert>
 
     <select id="selectRoleLikeRoleName" resultType="Role">
-        select* from ams_role where role_name like concat(concat("%",#{roleName}),"%")
+        select* from ums_role where role_name like concat(concat("%",#{roleName}),"%")
     </select>
 
     <select id="selectAllRole" resultMap="resultRole">
         SELECT ar.id,ar.role_name,ar.description,ara.authority_id,aa.authority_name
-        FROM ams_role ar , ams_authority aa, ams_role_authority ara
+        FROM ums_role ar , ums_authority aa, ums_role_authority ara
         WHERE ar.id = ara.role_id AND ara.authority_id = aa.id;
     </select>
     <resultMap type="Role" id="resultRole">
@@ -32,5 +32,30 @@
         </collection>
     </resultMap>
 
+    <select id="selectNotAuthorityRole" resultType="Role">
+        SELECT id, role_name, description FROM ums_role
+        WHERE id NOT in(SELECT role_id FROM ums_role_authority);
+    </select>
+    <!-- 批量删除 -->
+    <delete id="deleteRelationWithAuthority">
+        <foreach collection="authIds" item="authId" separator=";">
+            DELETE FROM ums_role_authority
+            <where>
+                role_id = #{roleId} AND authority_id = #{authId}
+            </where>
+        </foreach>
+    </delete>
 
+    <delete id="deleteRelations" parameterType="Integer">
+         DELETE FROM ums_role_authority
+         WHERE role_id = #{roleId}
+    </delete>
+
+    <!--关系批量插入-->
+    <insert id="insertRelations">
+        <foreach collection="authIds" item="authId" separator=";">
+            insert into ums_role_authority (role_id, authority_id)
+            VALUES (#{roleId}, #{authId})
+        </foreach>
+    </insert>
 </mapper>

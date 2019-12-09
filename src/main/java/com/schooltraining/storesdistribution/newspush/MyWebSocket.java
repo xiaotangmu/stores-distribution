@@ -1,12 +1,12 @@
 package com.schooltraining.storesdistribution.newspush;
 
 import com.alibaba.fastjson.JSON;
+import com.schooltraining.storesdistribution.entities.Msg;
 import com.schooltraining.storesdistribution.entities.Notification;
-import com.schooltraining.storesdistribution.entities.Shop;
 import com.schooltraining.storesdistribution.service.NotificationService;
-import com.schooltraining.storesdistribution.service.ShopService;
+import com.schooltraining.storesdistribution.service.StoreService;
 import io.netty.handler.codec.http.HttpHeaders;
-import io.netty.handler.timeout.IdleStateEvent;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,6 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
 
 //@ServerEndpoint(prefix = "netty-websocket")
 //@Component
@@ -32,15 +31,16 @@ public class MyWebSocket {
     public static NotificationService notificationService;
 
     
-    public static ShopService shopService;
+    public static StoreService shopService;
     
     @Autowired
     NotificationService notificationService2;
     
     @Autowired
-    ShopService shopService2;
-    
-    
+    StoreService shopService2;
+
+    static Map<String, Object> returnMap = null;
+
     @PostConstruct
     public void beforeInit() {
     	notificationService = notificationService2;
@@ -66,17 +66,24 @@ public class MyWebSocket {
     public void onOpen(Session session, HttpHeaders headers, ParameterMap parameterMap) throws IOException {
         
     	String userId = parameterMap.getParameter("userId");
-        String shopId = parameterMap.getParameter("shopId");
+        String storeId = parameterMap.getParameter("storeId");
         String userName = parameterMap.getParameter("userName");//没有该参数会报空指针异常
         userName = URLDecoder.decode(userName, "UTF-8");//解决请求路径的中文乱码
-
+        System.out.println(userId + " : " + userName + " : " + storeId);
         //添加client
         this.session = session;
-        Client client = new Client(userId, shopId, userName, session);
+        session.setAttribute("userId", userId);
+        session.setAttribute("storeId", storeId);
+        Client client = new Client(userId, storeId, userName, session);
         socketServers.add(client);
-
+        //发送用户数据库通知
+        List<Notification> notifications = notificationService.getNotificationsByUserId(Integer.parseInt(userId));
+        returnMap = new HashMap<>();
+        returnMap.put("notifications", notifications);
+        String jsonStr = JSON.toJSONString(Msg.success(returnMap));
+        session.sendText(jsonStr);
+        logger.info(jsonStr);
         logger.info("客户端:【{}】连接成功", "userId : " + userId + ", userName: " + userName);
-
     }
 
     @OnClose//客户端关闭连接时触发
@@ -102,10 +109,15 @@ public class MyWebSocket {
      */
     @OnMessage//接收消息
     public void onMessage(Session session, String message) {
+        if (StringUtils.isBlank(message)){
+            return ;
+        }
         Notification notification = JSON.parseObject(message, Notification.class);
         //创建时间
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         notification.setCreateTime(sdf.format(new Date()));
+        notification.setUserId(Integer.parseInt(session.getAttribute("userId")));
+        notification.setStoreId(Integer.parseInt(session.getAttribute("storeId")));
         //保存到数据库
         notification = notificationService.add(notification);
         System.out.println(notification);
@@ -120,19 +132,25 @@ public class MyWebSocket {
     //推送消息给分店店员，包括分店店长自己
     public synchronized static void pushNews(Notification notification){
         int notificationId = notification.getId();
-        int shopId = notification.getShopId();
+        int storeId = notification.getStoreId();
         //将消息与会员的关系保存到数据库
         //得到分店会员id
-        List<Integer> userIds = shopService.getUserIds(shopId);
+        List<Integer> userIds = shopService.getUserIds(storeId);
         int i = notificationService.keepWithMemberRelation(userIds, notificationId);
+        returnMap = new HashMap<>();
         if(i != 0){//插入成功
             List<Integer> readUsers = new ArrayList<>();
             //将消息推送给分店在线会员
             socketServers.forEach(client ->{
-                if (Integer.parseInt(client.getShopId()) == shopId) {
-                    String jsonStr = JSON.toJSONString(notification);
-                    client.getSession().sendText(jsonStr);
 
+                if (Integer.parseInt(client.getStoreId()) == storeId) {
+//                    String jsonStr = JSON.toJSONString(notification);
+                    List<Notification> notifications = new ArrayList<>();
+                    notification.setStatus("0");
+                    notifications.add(notification);
+                    returnMap.put("notifications", notifications);
+                    String jsonStr = JSON.toJSONString(Msg.success(returnMap));
+                    client.getSession().sendText(jsonStr);
                     readUsers.add(Integer.parseInt(client.getUserId()));
                 }
             });

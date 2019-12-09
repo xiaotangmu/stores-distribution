@@ -85,7 +85,9 @@ public class UserServiceImpl implements UserService{
 
         List<User> selectByExample = userMapper.select(user);// 以非空字段作为查询条件
         if (selectByExample != null && selectByExample.size() > 0) {//没有不是null，是[]
-            return selectByExample.get(0);
+			User user2 = selectByExample.get(0);
+			user2.setRole(roleService.getRoleById(user2.getRoleId()));
+            return user2;
         }
         return null;
 
@@ -93,11 +95,13 @@ public class UserServiceImpl implements UserService{
 
 	@Override
 	public int getUserByUserName(String userName) {
-		Example example = new Example(User.class);
-		Criteria createCriteria = example.createCriteria();
-		createCriteria.andEqualTo("userName", userName);
-		return userMapper.selectByExample(example).size();
-		
+		if(userName != null){
+			Example example = new Example(User.class);
+			Criteria createCriteria = example.createCriteria();
+			createCriteria.andEqualTo("userName", userName);
+			return userMapper.selectByExample(example).size();
+		}
+		return 0;
 	}
 
 	
@@ -140,7 +144,7 @@ public class UserServiceImpl implements UserService{
 //				List<Role> roles = getRolesByUserIds(userId);
 //				userFromDB.setRoles(roles);
 				
-				Role userRole = roleService.getRoleById(userFromDB.getShopId());
+				Role userRole = roleService.getRoleById(userFromDB.getStoreId());
 				userFromDB.setRole(userRole);
 				
 				//添加进缓存
@@ -183,7 +187,6 @@ public class UserServiceImpl implements UserService{
 		try {
 			int uint = userMapper.updateByPrimaryKeySelective(user);
 			if(uint != 0) {
-				System.out.println(user);
 				//更新缓存
 				jedis = redisUtil.getJedis();
 				String strKey = "user:" + user.getId() + ":info";

@@ -29,4 +29,10 @@
         </foreach>
     </update>
 
+    <!-- 获取用户消息 -->
+    <select id="getNotificationsByUserId" resultType="Notification">
+        SELECT id, title, content, create_time, status FROM wms_notification wn , wms_user_notification wun
+        WHERE wn.id = wun.notification_id AND wun.user_id = #{userId}
+    </select>
+
 </mapper>

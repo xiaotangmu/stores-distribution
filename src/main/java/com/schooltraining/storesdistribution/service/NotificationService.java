@@ -12,4 +12,5 @@ public interface NotificationService {
 
     public int updateStatusWithUser(List<Integer> userIds, int notificationId);
 
+    List<Notification> getNotificationsByUserId(Integer userId);
 }

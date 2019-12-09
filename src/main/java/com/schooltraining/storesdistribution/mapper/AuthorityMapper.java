@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface AuthorityMapper extends Mapper<Authority>{
 
-    List<Authority> getAuthorityByRoleId(Integer roleId);
+    List<Authority> getAuthorityByRoleId(int roleId);
 }

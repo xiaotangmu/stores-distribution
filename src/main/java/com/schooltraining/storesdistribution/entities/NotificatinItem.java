@@ -11,13 +11,13 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class NotificatinItem {
 
-    private Integer notificationId;//消息编号
+    private Integer id;//消息编号
     private String title;
     private String content;
     private String createTime;
     private Integer managerId;//推送消息的会员id
     private Integer managerName;//推送消息的人
-    private Integer shopId;//所属分店
+    private Integer storeId;//所属分店
     private Integer memberId;//所有者 -- 谁的消息
     private String status;//消息状态
 

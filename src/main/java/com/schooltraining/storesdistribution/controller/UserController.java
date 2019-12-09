@@ -1,5 +1,6 @@
 package com.schooltraining.storesdistribution.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.schooltraining.storesdistribution.annotations.LoginRequired;
 import com.schooltraining.storesdistribution.entities.Msg;
 import com.schooltraining.storesdistribution.entities.User;
@@ -16,22 +17,18 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 //@RequestMapping("user")
+@CrossOrigin(origins =  "*", maxAge = 3600)
 public class UserController {
 	
 	@Autowired
 	UserService userService;
-	
+
 	Map<String, Object> returnMap = null;
-	
+
 	//注册register
 	@PostMapping("regist")
 	public Object register(User user) {
@@ -110,11 +107,11 @@ public class UserController {
     	returnMap = new HashMap<>();
         try{
         	String userId = (String)request.getAttribute("userId");
-//        	System.out.println(userId);
         	//获取用户信息
         	User user = userService.getUserInfo(Integer.parseInt(userId));
         	if(user != null) {
-        		returnMap.put("info", user);
+				returnMap.put("authorities", user.getRole().getAuthorities());
+				returnMap.put("info", user);
         		return Msg.success(returnMap);
         	}
         	returnMap.put("message", "获取不到数据");
@@ -129,13 +126,15 @@ public class UserController {
     
     @PostMapping("user/update")
     @LoginRequired
+//    public Object update(@RequestBody(required = true) String updateUser, HttpServletRequest request){
     public Object update(User user, HttpServletRequest request){
     	returnMap = new HashMap<>();
         try{
-//        	System.out.println(user);
+//        	User user = JSON.parseObject(updateUser, User.class);
 //        	System.out.println(request.getAttribute("userId"));
+        	System.out.println(user);
         	String userId = (String) request.getAttribute("userId");
-        	user.setId(Integer.parseInt(userId));
+			user.setId(Integer.parseInt(userId));
         	int i = userService.update(user);
         	if(i != 0) {
         		return Msg.success("success");

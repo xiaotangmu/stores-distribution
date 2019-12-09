@@ -14,11 +14,11 @@ public interface RoleService {
 
     public List<Role> getRoles(String roleName);
 
-    public int update(Role role);
+    public int update(Role role, List<Integer> ids);
 
     public int delete(int id);
 
-    public Role add(Role role);
+    public Role add(Role role, List<Integer> authorityIds);
 
     public Map<String, String> getAll();
     

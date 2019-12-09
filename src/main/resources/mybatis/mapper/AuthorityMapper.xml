@@ -5,7 +5,7 @@
 <mapper namespace="com.schooltraining.storesdistribution.mapper.AuthorityMapper">
 
     <select id="getAuthorityByRoleId" resultType="Authority">
-        SELECT aa.id, authority_name FROM ams_authority aa INNER JOIN ams_role_authority ara
+        SELECT aa.id, authority_name FROM ums_authority aa INNER JOIN ums_role_authority ara
         WHERE aa.id = ara.authority_id AND ara.role_id = #{roleId};
     </select>
 

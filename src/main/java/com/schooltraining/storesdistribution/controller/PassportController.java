@@ -20,13 +20,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import com.alibaba.fastjson.JSON;
 
 @Controller
 @RequestMapping("user")
+@CrossOrigin(origins =  "*", maxAge = 3600)
 public class PassportController {
 
 	@Autowired
@@ -59,34 +58,41 @@ public class PassportController {
 
 	@PostMapping("login")
 	@ResponseBody
-	public Object login(User umsMember, HttpServletRequest request, HttpServletResponse response) {
+//	public Object login(@RequestBody(required = true) String userLogin, HttpServletRequest request, HttpServletResponse response) {
+	public Object login(User user, HttpServletRequest request, HttpServletResponse response) {
 		try {
+			System.out.println(user);
+//			System.out.println(userLogin);
+//			User user = JSON.parseObject(userLogin, User.class);
 			Map<String, Object> mapToken = new HashMap<>();
 			//查看是否存在用户
-			int userByUserName = userService.getUserByUserName(umsMember.getUserName());
-//			System.out.println(userByUserName);
-			if(userByUserName == 0) {
+			int i = userService.getUserByUserName(user.getUserName());
+//			System.out.println(i);
+			if(i == 0) {
 				mapToken.put("message", "该账号不存在");
 				return Msg.fail(mapToken);
 			}
-			
+
 			String token = "";
 
 			// 调用用户服务验证用户名和密码
-			User umsMemberLogin = userService.login(umsMember);
-			System.out.println(umsMemberLogin);
-			
+			User umsMemberLogin = new User();
+			umsMemberLogin.setUserName(user.getUserName());
+			umsMemberLogin.setPassword(user.getPassword());
+			umsMemberLogin = userService.login(umsMemberLogin);
+//			System.out.println(umsMemberLogin);
+
 			Map<String, Object> userMap = new HashMap<>();
 			if (umsMemberLogin != null) {
 				// 登录成功
 				// 用jwt制作token
 				String userIdStr = umsMemberLogin.getId() + "";
 				String userNameStr = umsMemberLogin.getUserName();
-				String shopIdStr = umsMemberLogin.getShopId() + "";
-				
+				String storeIdStr = umsMemberLogin.getStoreId() + "";
+
 				userMap.put("userId", userIdStr);
 				userMap.put("userName", userNameStr);
-				userMap.put("shopId", shopIdStr);
+				userMap.put("storeId", storeIdStr);
 
 				String ip = request.getHeader("x-forwarded-for");// 通过nginx转发的客户端ip
 				if (StringUtils.isBlank(ip)) {
@@ -108,26 +114,24 @@ public class PassportController {
 				return Msg.fail(mapToken);
 //				token = "fail";
 			}
-			
+
 			//获取该用户角色信息
 //			List<Role> roles = userService.getRolesByUserIds(umsMemberLogin.getId());
 			Role userRole = roleService.getRoleById(umsMemberLogin.getRoleId());
 //			System.out.println(roles);
-			
+
 			//缓存用户信息
 //			umsMemberLogin.setRoles(roles);
 			umsMemberLogin.setRole(userRole);
-			
+
 			userService.setUserCache(umsMemberLogin);
-			
+
 			mapToken.putAll(userMap);
 			mapToken.put("role", userRole);
 			mapToken.put("token", token);
-			
-			
+
 			//记录cookie
 			CookieUtil.setCookie(request, response, "oldToken", token, 60 * 60 *2, true);
-			
 			return Msg.success(mapToken);
 		}catch(Exception e) {
 			Map<String, Object> tokenMap = new HashMap<>();
@@ -136,11 +140,14 @@ public class PassportController {
 		}
 	}
 
-    @PostMapping("logout")
+    @GetMapping("logout")
+	@ResponseBody
+	@LoginRequired
     public Object logout(HttpServletRequest request, HttpServletResponse response){
     	returnMap = new HashMap<>();
         try{
-        	String oldToken = CookieUtil.getCookieValue(request, "oldToken", true);
+//			System.out.println("hello");
+			String oldToken = CookieUtil.getCookieValue(request, "oldToken", true);
         	if(oldToken != null) {
         		//将cookie移除
         		CookieUtil.deleteCookie(request, response, "oldToken");
