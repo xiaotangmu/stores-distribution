@@ -13,4 +13,8 @@ public interface StoreService {
     int updateStore(Store store);
 
     Store getStoreById(Integer storeId);
+
+    int addStore(Store store);
+
+    int deleteStoreById(Integer id);
 }

@@ -15,7 +15,7 @@ public interface UserService {
 
     public void addUserToken(String token, String userId);
 
-	public int getUserByUserName(String userName);
+	public List<User> getUserLikeName(String name);
 	
 	public List<Integer> getRoleIdsByUserId(int userId);
 
@@ -30,5 +30,8 @@ public interface UserService {
 	public List<User> getAll();
 
 	public User addUser(User user);
-    
+
+	int getUserByUserName(String userName);//判断是否存在用户，注册时使用
+
+	int updateRole(Integer id, Integer roleId);
 }

@@ -94,14 +94,15 @@ public class UserServiceImpl implements UserService{
     }
 
 	@Override
-	public int getUserByUserName(String userName) {
-		if(userName != null){
-			Example example = new Example(User.class);
-			Criteria createCriteria = example.createCriteria();
-			createCriteria.andEqualTo("userName", userName);
-			return userMapper.selectByExample(example).size();
+	public List<User> getUserLikeName(String name) {
+		if(StringUtils.isNotBlank(name)){
+			List<User> users = userMapper.selectUserLikeName(name);
+			if(users == null || users.get(0).getId() == null || users.get(0).getId() == 0){
+				return null;
+			}
+			return users;
 		}
-		return 0;
+		return null;
 	}
 
 	
@@ -213,7 +214,7 @@ public class UserServiceImpl implements UserService{
 			users.forEach(user -> {
 //				user.setRoles(getRolesByUserIds(user.getId()));
 				user.setRole(roleService.getRoleById(user.getRoleId()));
-				System.out.println(user);
+//				System.out.println(user);
 				users2.add(user);
 			});
 			return users2;
@@ -226,7 +227,7 @@ public class UserServiceImpl implements UserService{
 	public User addUser(User user) {
 		Jedis jedis = null;
 		try {
-			
+			user.setRoleId(1);//默认角色
 			int i = userMapper.insertSelective(user);
 			if(i != 0) {
 				//加入缓存
@@ -240,5 +241,46 @@ public class UserServiceImpl implements UserService{
 			}
 		}
 		
+	}
+
+	@Override
+	public int getUserByUserName(String userName) {//注册时判断是否已经存在该用户
+		if(userName != null){
+			Example example = new Example(User.class);
+			Criteria createCriteria = example.createCriteria();
+			createCriteria.andEqualTo("userName", userName);
+			return userMapper.selectByExample(example).size();
+		}
+		return 0;
+	}
+
+	@Override
+	public int updateRole(Integer id, Integer roleId) {
+		Jedis jedis = null;
+		try{
+			if (id != null && roleId != null && id != 0 && roleId != 0){
+				User user = new User();
+				user.setId(id);
+				user.setRoleId(roleId);
+				int i = userMapper.updateByPrimaryKeySelective(user);
+				if (i != 0) {
+					//更新缓存 -- 删除缓存直接
+					jedis = redisUtil.getJedis();
+					String cacheKey = "user:" + id + ":info";
+					String s = jedis.get(cacheKey);
+					if (StringUtils.isBlank(s)){
+						jedis.del(cacheKey);
+					}
+					return i;
+				}
+			}
+			return 0;
+		}finally{
+			if (jedis != null) {
+				jedis.close();
+			}
+		}
+
+
 	}
 }

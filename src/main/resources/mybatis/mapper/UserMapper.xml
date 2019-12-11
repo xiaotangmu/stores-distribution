@@ -5,6 +5,16 @@
 <mapper namespace="com.schooltraining.storesdistribution.mapper.UserMapper">
     
     <select id="getRoleIdsByUserId" resultType="Integer">
-        SELECT role_id from ums_user_role where user_id = #{userId};
+        SELECT role_id from ums_user_role where user_id = #{userId}
     </select>
+
+    <select id="selectUserLikeUserNameOrName" resultType="User">
+        SELECT * from ums_user where user_name like concat(concat("%",#{userName}),"%")
+        OR name like concat(concat("%",#{userName}),"%")
+    </select>
+
+    <select id="selectUserLikeName" resultType="User">
+        SELECT * from ums_user where name like concat(concat("%",#{name}),"%")
+    </select>
+
 </mapper>

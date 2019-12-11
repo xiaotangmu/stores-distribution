@@ -25,9 +25,49 @@ public class StoreController {
     @Autowired
     StoreService storeService;
 
+    @PostMapping("delete")
+    @LoginRequired
+    public Object delete(Integer id){
+        returnMap = new HashMap<>();
+        try {
+//            System.out.println(id);
+            if(id != null || id != 0){
+                int i = storeService.deleteStoreById(id);
+                if (i != 0) {
+                    returnMap.put("status", "success");
+                    return Msg.success(returnMap);
+                }
+            }
+            returnMap.put("message", "出错了");
+            return Msg.fail(returnMap);
+        } catch(Exception e) {
+            e.printStackTrace();
+            returnMap.put("message", "服务器异常");
+            return Msg.fail(returnMap);
+        }
+    }
+
+    @PostMapping("add")
+    @LoginRequired
+    public Object add(Store store){
+        returnMap = new HashMap<>();
+        try {
+            System.out.println(store);
+            int storeId = storeService.addStore(store);
+            if(storeId != 0){
+                return Msg.success(storeId);
+            }
+            returnMap.put("message", "添加失败");
+            return Msg.fail(returnMap);
+        } catch(Exception e) {
+            e.printStackTrace();
+            returnMap.put("message", "服务器异常");
+            return Msg.fail(returnMap);
+        }
+    }
+
     @PostMapping("getStore")
     @LoginRequired
-//    public Object getStore(String storeId){
     public Object getStore(Integer storeId){
         returnMap = new HashMap<>();
         try {
@@ -72,8 +112,8 @@ public class StoreController {
 
     //获取所有店铺信息
     @GetMapping("getAll")
-    @LoginRequired
-    public Object module() {
+//    @LoginRequired
+    public Object getAll() {
         returnMap = new HashMap<>();
         try {
             List<Store> stores = storeService.getAll();

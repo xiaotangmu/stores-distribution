@@ -6,10 +6,7 @@ import com.schooltraining.storesdistribution.entities.User;
 import com.schooltraining.storesdistribution.service.IntegrationService;
 import com.schooltraining.storesdistribution.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -29,12 +26,14 @@ public class IntegrationController {
     Map<String, Object> returnMap = null;
 
     //积分兑换，减少积分
-    @GetMapping("subtract")
+    @PostMapping("subtract")
     @LoginRequired
     public Object subtractIntegration(int integration, HttpServletRequest request) {
         returnMap = new HashMap<>();
         try {
+//            System.out.println(integration);
             String userId = (String)request.getAttribute("userId");
+//            System.out.println(userId);
             User user = userService.getUser(Integer.parseInt(userId));
             return doIntegration(user, integration, 2);//-
         } catch(Exception e) {
@@ -45,7 +44,7 @@ public class IntegrationController {
     }
 
     //增加会员积分
-    @GetMapping("add")
+    @PostMapping("add")
     @LoginRequired
     public Object addIntegration(int integration, HttpServletRequest request) {
         returnMap = new HashMap<>();
@@ -78,6 +77,8 @@ public class IntegrationController {
                 user.setIntegration(result);
             }
             int i = userService.update(user);
+            System.out.println(user);
+            System.out.println(i);
             if (i != 0) {
                 returnMap.put("status", "success");
                 return Msg.success(returnMap);

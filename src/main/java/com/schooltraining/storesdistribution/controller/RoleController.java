@@ -76,13 +76,6 @@ public class RoleController {
         try {
 //            System.out.println(role);
             String idsStr = role.getAuthorityIds();
-//            List<Integer> authorityIds = new ArrayList<>();
-//            if(StringUtils.isNotBlank(idsStr)){
-//                String[] split = idsStr.split("/");
-//                for (int i = 0; i < split.length; i++){
-//                    authorityIds.add(Integer.parseInt(split[i]));
-//                }
-//            }
             List<Integer> authorityIds = splitStr(idsStr);
 //            System.out.println(authorityIds);
             role = roleService.add(role, authorityIds);
